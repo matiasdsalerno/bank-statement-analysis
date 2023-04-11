@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  bank-statement-analysis
+
+  Sample SAM Template for bank-statement-analysis
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 20
+    MemorySize: 128
+
+Resources:
+  BankStatementsBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: "bank-statements-files"
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: "s3:ObjectCreated:*"
+            Function: !GetAtt BankStatementProcessorLambda.Arn
+
+  BankStatementReportsBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: "bank-statement-reports"
+
+  S3InvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref BankStatementProcessorLambda
+      Principal: s3.amazonaws.com
+      SourceArn: arn:aws:s3:::bank-statements-files
+
+  BankStatementProcessorLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: BankStatementProcessorLambda
+      Handler: com.programmingwithmati.aws.App::handleRequest
+      Runtime: java11
+      Role: !GetAtt BankStatementProcessorLambdaRole.Arn
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: VALUE
+          JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1 # More info about tiered compilation https://aws.amazon.com/blogs/compute/optimizing-aws-lambda-function-performance-for-java/
+
+  BankStatementProcessorLambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "BankStatementProcessorLambdaRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      Policies:
+        - PolicyName: "s3-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "s3:GetObject"
+                  - "s3:PutObject"
+                  - "s3:PutObjectAcl"
+                  - "s3:ListBucket"
+                Resource:
+                  - arn:aws:s3:::bank-statements-files
+                  - arn:aws:s3:::bank-statements-files/*
+                  - arn:aws:s3:::bank-statement-reports
+                  - arn:aws:s3:::bank-statement-reports/*
