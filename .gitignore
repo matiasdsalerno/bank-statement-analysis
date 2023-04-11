@@ -1,3 +1,4 @@
 # Project exclude paths
 /.aws-sam/
 /.idea/
+/BankStatementProcessorLambda/target/
