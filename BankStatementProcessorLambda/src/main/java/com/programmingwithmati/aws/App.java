@@ -24,24 +24,28 @@ public class App implements RequestHandler<S3Event, Void> {
     private static final String BANK_STATEMENT_REPORTS_BUCKET_NAME = "bank-statement-reports";
 
     public Void handleRequest(final S3Event input, final Context context) {
-        context.getLogger().log("New S3 event. Records size: " + input.getRecords().size());
-        for (S3Event.S3EventNotificationRecord record : input.getRecords()) {
-            String s3Key = record.getS3().getObject().getKey();
-            String sourceBucket = record.getS3().getBucket().getName();
+        context.getLogger().log("New S3 event. Stream version. Records size: " + input.getRecords().size());
 
-            context.getLogger().log("Record Name: " + s3Key + ". S3 bucket: " + sourceBucket);
+        input.getRecords().stream()
+                .peek(record -> context.getLogger().log("Peeking record. Record Name: " + record.getS3().getObject().getKey() + ". S3 bucket: " + record.getS3().getBucket().getName()) )
+                .forEach( record -> {
+                    String s3Key = record.getS3().getObject().getKey();
+                    String sourceBucket = record.getS3().getBucket().getName();
 
-            GetObjectRequest getObjectRequest = new GetObjectRequest(sourceBucket, s3Key);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(s3.getObject(getObjectRequest).getObjectContent()));
-            String fileContent = reader.lines().collect(Collectors.joining("\n"));
+                    context.getLogger().log("Record Name: " + s3Key + ". S3 bucket: " + sourceBucket);
 
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentLength(fileContent.length());
+                    GetObjectRequest getObjectRequest = new GetObjectRequest(sourceBucket, s3Key);
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(s3.getObject(getObjectRequest).getObjectContent()));
+                    String fileContent = reader.lines().collect(Collectors.joining("\n"));
 
-            PutObjectRequest putObjectRequest = new PutObjectRequest(BANK_STATEMENT_REPORTS_BUCKET_NAME, s3Key, new ByteArrayInputStream(fileContent.getBytes()), metadata);
-            var putObjectResult = s3.putObject(putObjectRequest);
-            context.getLogger().log("Result of object save  was: " + putObjectResult.getContentMd5() + ". Version Id: " + putObjectResult.getVersionId());
-        }
+                    ObjectMetadata metadata = new ObjectMetadata();
+                    metadata.setContentLength(fileContent.length());
+
+                    PutObjectRequest putObjectRequest = new PutObjectRequest(BANK_STATEMENT_REPORTS_BUCKET_NAME, s3Key, new ByteArrayInputStream(fileContent.getBytes()), metadata);
+                    var putObjectResult = s3.putObject(putObjectRequest);
+                    context.getLogger().log("Result of object save  was: " + putObjectResult.getContentMd5() + ". Version Id: " + putObjectResult.getVersionId());
+                });
+
         return null;
     }
 }
