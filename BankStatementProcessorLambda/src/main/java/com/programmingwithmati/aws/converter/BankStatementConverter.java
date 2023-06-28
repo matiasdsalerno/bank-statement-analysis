@@ -34,6 +34,6 @@ public class BankStatementConverter {
   }
 
   private String lineToFileLine(BankStatementReportLine reportLine) {
-    return "%s;%s".formatted(reportLine.category().toString(), reportLine.amount().toString());
+    return String.format("%s;%s", reportLine.category().toString(), reportLine.amount().toString());
   }
 }
