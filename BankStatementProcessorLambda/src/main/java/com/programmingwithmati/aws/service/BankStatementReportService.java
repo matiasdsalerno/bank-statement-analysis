@@ -10,6 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Bank Statement Report Service will transform a Bank Statement into a Statement Report
+ * grouping transactions by category.
+ */
 public class BankStatementReportService {
 
   public List<BankStatementReportLine> generateBankStatementReport(BankStatement bankStatement) {
