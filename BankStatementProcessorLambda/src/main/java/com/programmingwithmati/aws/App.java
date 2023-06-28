@@ -46,7 +46,9 @@ public class App implements RequestHandler<S3Event, Void> {
     }
 
   private String generateFileContent(List<BankStatementReportLine> reportLines) {
-    return reportLines.stream().map(BankStatementReportLine::toString).collect(Collectors.joining("\n"));
+    return reportLines.stream()
+            .map(it -> String.format("%s;%s", it.category().toString(), it.amount().toString()))
+            .collect(Collectors.joining("\n"));
   }
 
   private BankStatement recordToBankStatement(S3EventNotification.S3EventNotificationRecord record) {
