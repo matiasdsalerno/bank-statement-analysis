@@ -11,6 +11,7 @@ import com.programmingwithmati.aws.model.S3File;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
+import java.util.stream.Collectors;
 
 public class S3Service {
 
@@ -25,7 +26,7 @@ public class S3Service {
     var reader = new BufferedReader(new InputStreamReader(s3.getObject(getObjectRequest).getObjectContent()));
     var fileLines = reader
             .lines();
-    return new S3File(sourceBucket, s3Key, fileLines);
+    return new S3File(sourceBucket, s3Key, fileLines.collect(Collectors.toList()));
   }
 
   public void saveFileToS3(String fileContent) {

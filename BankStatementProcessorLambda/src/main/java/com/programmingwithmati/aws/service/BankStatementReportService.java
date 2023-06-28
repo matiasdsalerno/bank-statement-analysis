@@ -21,7 +21,7 @@ public class BankStatementReportService {
             .entrySet()
             .stream()
             .map(this::toBankStatementReportLine)
-            .toList();
+            .collect(Collectors.toList());
   }
 
   private Map<TransactionCategory, List<BankStatementLine>> groupLinesByCategory(BankStatement bankStatement) {

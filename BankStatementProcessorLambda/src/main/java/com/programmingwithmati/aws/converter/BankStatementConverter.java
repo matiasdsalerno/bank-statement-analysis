@@ -4,7 +4,7 @@ import com.programmingwithmati.aws.model.*;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 public class BankStatementConverter {
 
@@ -15,8 +15,7 @@ public class BankStatementConverter {
             s3File.fileLines()
                     .stream()
                     .map(this::toBankStatementLine)
-                    .toList()
-    );
+                    .collect(Collectors.toList()));
   }
   private BankStatementLine toBankStatementLine(String line) {
     var csvLine = line.split(";");
@@ -30,7 +29,7 @@ public class BankStatementConverter {
   }
 
   S3File reportToS3File(List<BankStatementReportLine> reportLines, String bucket, String s3Key) {
-    var fileLines = reportLines.stream().map(this::lineToFileLine).toList();
+    var fileLines = reportLines.stream().map(this::lineToFileLine).collect(Collectors.toList());
     return new S3File(bucket, s3Key, fileLines);
   }
 
